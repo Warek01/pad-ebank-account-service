@@ -1,8 +1,8 @@
-import { Metadata } from '@grpc/grpc-js';
+import grpc, { Metadata } from '@grpc/grpc-js';
 import { Controller, forwardRef, Inject } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RpcException } from '@nestjs/microservices';
 import bcrypt from 'bcryptjs';
 
 import {
@@ -10,22 +10,25 @@ import {
   AccountServiceControllerMethods,
   AddCurrencyOptions,
   AddCurrencyResult,
-  AuthCredentials,
-  AuthStatus,
+  AuthResult,
   BlockCardResult,
   CanPerformTransactionResult,
   CardIdentifier,
   ChangeCurrencyOptions,
   ChangeCurrencyResult,
   GetProfileOptions,
+  GetProfileResult,
   LoginCredentials,
-  Profile,
   RegisterCredentials,
   TransactionData,
   UnblockCardResult,
 } from '@ebank-account/generated/proto/account_service';
+import { Currency as ProtoCurrency } from '@ebank-account/generated/proto/currency';
+import { ServiceErrorCode } from '@ebank-account/generated/proto/error';
 import { Card, User } from '@ebank-account/entities';
 import { CardService } from '@ebank-account/card/card.service';
+import { CurrencyService } from '@ebank-account/currency/currency.service';
+import { Currency } from '@ebank-account/enums/currency';
 
 @Controller('account')
 @AccountServiceControllerMethods()
@@ -37,65 +40,169 @@ export class AccountController implements AccountServiceController {
     private readonly userRepo: Repository<User>,
     @Inject(forwardRef(() => CardService))
     private readonly cardService: CardService,
+    @Inject(forwardRef(() => CurrencyService))
+    private readonly currencyService: CurrencyService,
   ) {}
 
-  public addCurrency(
+  async addCurrency(
     request: AddCurrencyOptions,
     metadata?: Metadata,
-  ):
-    | Promise<AddCurrencyResult>
-    | Observable<AddCurrencyResult>
-    | AddCurrencyResult {
-    return undefined!;
+  ): Promise<AddCurrencyResult> {
+    const card = await this.cardRepo.findOneBy({
+      code: request.cardIdentifier?.cardCode,
+    });
+
+    if (!card) {
+      return {
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'card not found',
+        },
+      };
+    }
+
+    const currencyForAdding = this.protoCurrencyToCurrency(request.currency);
+
+    card.currencyAmount +=
+      card.currency === currencyForAdding
+        ? request.amount
+        : this.currencyService.convert(
+            request.amount,
+            currencyForAdding,
+            card.currency,
+          );
+
+    await this.cardRepo.save(card);
+
+    return {
+      error: null,
+    };
   }
 
-  public blockCard(
+  async blockCard(
     request: CardIdentifier,
     metadata?: Metadata,
-  ): Promise<BlockCardResult> | Observable<BlockCardResult> | BlockCardResult {
-    return undefined!;
+  ): Promise<BlockCardResult> {
+    const card = await this.cardRepo.findOneBy({
+      code: request.cardCode,
+    });
+
+    if (!card) {
+      return {
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'card not found',
+        },
+      };
+    }
+
+    card.isBlocked = true;
+
+    await this.cardRepo.save(card);
+
+    return {
+      error: null,
+    };
   }
 
-  public canPerformTransaction(
+  async canPerformTransaction(
     request: TransactionData,
     metadata?: Metadata,
-  ):
-    | Promise<CanPerformTransactionResult>
-    | Observable<CanPerformTransactionResult>
-    | CanPerformTransactionResult {
-    return undefined!;
+  ): Promise<CanPerformTransactionResult> {
+    const card = await this.cardRepo.findOneBy({
+      code: request.cardIdentifier?.cardCode,
+    });
+
+    if (!card) {
+      return {
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'card not found',
+        },
+      };
+    }
+
+    const requestedAmount = this.currencyService.convert(
+      request.amount,
+      this.protoCurrencyToCurrency(request.currency),
+      card.currency,
+    );
+
+    return {
+      canPerform: requestedAmount <= card.currencyAmount,
+    };
   }
 
-  public changeCurrency(
+  async changeCurrency(
     request: ChangeCurrencyOptions,
     metadata?: Metadata,
-  ):
-    | Promise<ChangeCurrencyResult>
-    | Observable<ChangeCurrencyResult>
-    | ChangeCurrencyResult {
-    return undefined!;
+  ): Promise<ChangeCurrencyResult> {
+    const card = await this.cardRepo.findOneBy({
+      code: request.cardIdentifier?.cardCode,
+    });
+
+    if (!card) {
+      throw new RpcException({
+        code: grpc.status.NOT_FOUND,
+        message: 'card not found',
+      });
+    }
+
+    const newCurrency = this.protoCurrencyToCurrency(request.currency);
+    const newAmount = this.currencyService.convert(
+      card.currencyAmount,
+      card.currency,
+      newCurrency,
+    );
+
+    card.currency = newCurrency;
+    card.currencyAmount = newAmount;
+    await this.cardRepo.save(card);
+
+    return {
+      error: null,
+    };
   }
 
-  public getProfile(
+  async getProfile(
     request: GetProfileOptions,
     metadata?: Metadata,
-  ): Promise<Profile> | Observable<Profile> | Profile {
-    return undefined!;
-  }
-
-  async login(
-    request: LoginCredentials,
-    metadata?: Metadata,
-  ): Promise<AuthCredentials> {
+  ): Promise<GetProfileResult> {
     const user = await this.userRepo.findOneBy({
       email: request.email,
     });
 
     if (!user) {
       return {
-        email: '',
-        fullName: '',
-        authStatus: AuthStatus.USER_NOT_FOUND,
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'user not found',
+        },
+      };
+    }
+
+    return {
+      profile: {
+        email: user.email,
+        fullName: user.fullName,
+      },
+    };
+  }
+
+  async login(
+    request: LoginCredentials,
+    metadata?: Metadata,
+  ): Promise<AuthResult> {
+    const user = await this.userRepo.findOneBy({
+      email: request.email,
+    });
+
+    if (!user) {
+      return {
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'user not found',
+        },
       };
     }
 
@@ -106,32 +213,35 @@ export class AccountController implements AccountServiceController {
 
     if (!compareResult) {
       return {
-        email: '',
-        fullName: '',
-        authStatus: AuthStatus.INVALID_CREDENTIALS,
+        error: {
+          code: ServiceErrorCode.UNAUTHORIZED,
+          message: 'invalid password',
+        },
       };
     }
 
     return {
-      email: user.email,
-      fullName: user.fullName,
-      authStatus: AuthStatus.SUCCESS,
+      credentials: {
+        email: user.email,
+        fullName: user.fullName,
+      },
     };
   }
 
   async register(
     request: RegisterCredentials,
     metadata?: Metadata,
-  ): Promise<AuthCredentials> {
+  ): Promise<AuthResult> {
     const alreadyExists = await this.userRepo.exists({
       where: { email: request.email },
     });
 
     if (alreadyExists) {
       return {
-        email: '',
-        fullName: '',
-        authStatus: AuthStatus.USER_ALREADY_EXISTS,
+        error: {
+          code: ServiceErrorCode.CONFLICT,
+          message: 'user already exists',
+        },
       };
     }
 
@@ -149,19 +259,60 @@ export class AccountController implements AccountServiceController {
     await this.cardRepo.save(user.card);
 
     return {
-      email: user.email,
-      fullName: user.fullName,
-      authStatus: AuthStatus.SUCCESS,
+      credentials: {
+        email: user.email,
+        fullName: user.fullName,
+      },
     };
   }
 
-  public unblockCard(
+  async unblockCard(
     request: CardIdentifier,
     metadata?: Metadata,
-  ):
-    | Promise<UnblockCardResult>
-    | Observable<UnblockCardResult>
-    | UnblockCardResult {
-    return undefined!;
+  ): Promise<UnblockCardResult> {
+    const card = await this.cardRepo.findOneBy({
+      code: request.cardCode,
+    });
+
+    if (!card) {
+      return {
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'card not found',
+        },
+      };
+    }
+
+    card.isBlocked = false;
+
+    await this.cardRepo.save(card);
+
+    return {
+      error: null,
+    };
+  }
+
+  private protoCurrencyToCurrency(currency: ProtoCurrency): Currency {
+    switch (currency) {
+      case ProtoCurrency.EUR:
+        return Currency.Eur;
+      case ProtoCurrency.MDL:
+        return Currency.Mdl;
+      case ProtoCurrency.USD:
+        return Currency.Usd;
+      default:
+        throw new Error('unknown currency');
+    }
+  }
+
+  private currencyToProtoCurrency(currency: Currency): ProtoCurrency {
+    switch (currency) {
+      case Currency.Eur:
+        return ProtoCurrency.EUR;
+      case Currency.Mdl:
+        return ProtoCurrency.MDL;
+      case Currency.Usd:
+        return ProtoCurrency.USD;
+    }
   }
 }

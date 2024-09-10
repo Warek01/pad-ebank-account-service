@@ -3,11 +3,12 @@ syntax = "proto3";
 package account_service;
 
 import "currency.proto";
+import "error.proto";
 
 service AccountService {
-  rpc Login (LoginCredentials) returns (AuthCredentials);
-  rpc Register (RegisterCredentials) returns (AuthCredentials);
-  rpc GetProfile (GetProfileOptions) returns (Profile);
+  rpc Login (LoginCredentials) returns (AuthResult);
+  rpc Register (RegisterCredentials) returns (AuthResult);
+  rpc GetProfile (GetProfileOptions) returns (GetProfileResult);
   rpc AddCurrency (AddCurrencyOptions) returns (AddCurrencyResult);
   rpc CanPerformTransaction (TransactionData) returns (CanPerformTransactionResult);
   rpc ChangeCurrency (ChangeCurrencyOptions) returns (ChangeCurrencyResult);
@@ -20,10 +21,16 @@ message LoginCredentials {
   string password = 2;
 }
 
-message AuthCredentials {
-  string email = 1;
-  string full_name = 2;
-  AuthStatus auth_status = 4;
+message AuthResult {
+  message AuthCredentials {
+    string email = 1;
+    string full_name = 2;
+  }
+
+  oneof result {
+    AuthCredentials credentials = 1;
+    shared.ServiceError error = 2;
+  }
 }
 
 message RegisterCredentials {
@@ -32,47 +39,53 @@ message RegisterCredentials {
   string full_name = 3;
 }
 
-enum AuthStatus {
-  SUCCESS = 0;
-  USER_ALREADY_EXISTS = 1;
-  USER_NOT_FOUND = 3;
-  INVALID_CREDENTIALS = 2;
-}
-
 message GetProfileOptions {
   string email = 1;
 }
 
-message Profile {
-  string email = 1;
-  string full_name = 2;
+
+message GetProfileResult {
+  message Profile {
+    string email = 1;
+    string full_name = 2;
+  }
+
+  oneof result {
+    Profile profile = 1;
+    shared.ServiceError error = 2;
+  }
 }
 
 message AddCurrencyOptions {
   shared.Currency currency = 1;
   int32 amount = 2;
+  CardIdentifier card_identifier = 3;
 }
 
 message AddCurrencyResult {
-  bool success = 1;
+  shared.ServiceError error = 1;
 }
 
 message TransactionData {
   shared.Currency currency = 1;
   int32 amount = 2;
-  string email = 3;
+  CardIdentifier card_identifier = 3;
 }
 
 message CanPerformTransactionResult {
-  bool can_perform = 1;
+  oneof result {
+    bool can_perform = 1;
+    shared.ServiceError error = 2;
+  }
 }
 
 message ChangeCurrencyOptions {
   shared.Currency currency = 1;
+  CardIdentifier card_identifier = 2;
 }
 
 message ChangeCurrencyResult {
-  bool success = 1;
+  shared.ServiceError error = 1;
 }
 
 message CardIdentifier {
@@ -80,9 +93,9 @@ message CardIdentifier {
 }
 
 message BlockCardResult {
-  bool success = 1;
+  shared.ServiceError error = 1;
 }
 
 message UnblockCardResult {
-  bool success = 1;
+  shared.ServiceError error = 1;
 }

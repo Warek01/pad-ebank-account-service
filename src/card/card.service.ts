@@ -8,6 +8,7 @@ export class CardService {
 
   createCard(user: User) {
     const card = new Card();
+
     card.cvv = Math.random().toString().slice(-4, -1);
     card.code = Array(4)
       .fill(0)

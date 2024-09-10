@@ -9,26 +9,23 @@ import { Metadata } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 import { Currency } from "./currency";
+import { ServiceError } from "./error";
 
 export const protobufPackage = "account_service";
-
-export enum AuthStatus {
-  SUCCESS = 0,
-  USER_ALREADY_EXISTS = 1,
-  USER_NOT_FOUND = 3,
-  INVALID_CREDENTIALS = 2,
-  UNRECOGNIZED = -1,
-}
 
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export interface AuthCredentials {
+export interface AuthResult {
+  credentials?: AuthResult_AuthCredentials | null;
+  error?: ServiceError | null;
+}
+
+export interface AuthResult_AuthCredentials {
   email: string;
   fullName: string;
-  authStatus: AuthStatus;
 }
 
 export interface RegisterCredentials {
@@ -41,7 +38,12 @@ export interface GetProfileOptions {
   email: string;
 }
 
-export interface Profile {
+export interface GetProfileResult {
+  profile?: GetProfileResult_Profile | null;
+  error?: ServiceError | null;
+}
+
+export interface GetProfileResult_Profile {
   email: string;
   fullName: string;
 }
@@ -49,28 +51,31 @@ export interface Profile {
 export interface AddCurrencyOptions {
   currency: Currency;
   amount: number;
+  cardIdentifier?: CardIdentifier | null;
 }
 
 export interface AddCurrencyResult {
-  success: boolean;
+  error?: ServiceError | null;
 }
 
 export interface TransactionData {
   currency: Currency;
   amount: number;
-  email: string;
+  cardIdentifier?: CardIdentifier | null;
 }
 
 export interface CanPerformTransactionResult {
-  canPerform: boolean;
+  canPerform?: boolean | null;
+  error?: ServiceError | null;
 }
 
 export interface ChangeCurrencyOptions {
   currency: Currency;
+  cardIdentifier?: CardIdentifier | null;
 }
 
 export interface ChangeCurrencyResult {
-  success: boolean;
+  error?: ServiceError | null;
 }
 
 export interface CardIdentifier {
@@ -78,21 +83,21 @@ export interface CardIdentifier {
 }
 
 export interface BlockCardResult {
-  success: boolean;
+  error?: ServiceError | null;
 }
 
 export interface UnblockCardResult {
-  success: boolean;
+  error?: ServiceError | null;
 }
 
 export const ACCOUNT_SERVICE_PACKAGE_NAME = "account_service";
 
 export interface AccountServiceClient {
-  login(request: LoginCredentials, metadata?: Metadata): Observable<AuthCredentials>;
+  login(request: LoginCredentials, metadata?: Metadata): Observable<AuthResult>;
 
-  register(request: RegisterCredentials, metadata?: Metadata): Observable<AuthCredentials>;
+  register(request: RegisterCredentials, metadata?: Metadata): Observable<AuthResult>;
 
-  getProfile(request: GetProfileOptions, metadata?: Metadata): Observable<Profile>;
+  getProfile(request: GetProfileOptions, metadata?: Metadata): Observable<GetProfileResult>;
 
   addCurrency(request: AddCurrencyOptions, metadata?: Metadata): Observable<AddCurrencyResult>;
 
@@ -106,17 +111,17 @@ export interface AccountServiceClient {
 }
 
 export interface AccountServiceController {
-  login(
-    request: LoginCredentials,
-    metadata?: Metadata,
-  ): Promise<AuthCredentials> | Observable<AuthCredentials> | AuthCredentials;
+  login(request: LoginCredentials, metadata?: Metadata): Promise<AuthResult> | Observable<AuthResult> | AuthResult;
 
   register(
     request: RegisterCredentials,
     metadata?: Metadata,
-  ): Promise<AuthCredentials> | Observable<AuthCredentials> | AuthCredentials;
+  ): Promise<AuthResult> | Observable<AuthResult> | AuthResult;
 
-  getProfile(request: GetProfileOptions, metadata?: Metadata): Promise<Profile> | Observable<Profile> | Profile;
+  getProfile(
+    request: GetProfileOptions,
+    metadata?: Metadata,
+  ): Promise<GetProfileResult> | Observable<GetProfileResult> | GetProfileResult;
 
   addCurrency(
     request: AddCurrencyOptions,

@@ -13,6 +13,7 @@ TS_ARGS=(
   'outputClientImpl=true'
   'snakeToCamel=true'
   'nestJs=true'
+  'useNullAsOptional=true'
   'addNestjsRestParameter=false'
   'addGrpcMetadata=true'
   'useOptionals=messages'

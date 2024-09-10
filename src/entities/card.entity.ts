@@ -21,7 +21,7 @@ export class Card {
   @Column({ type: 'enum', enum: Currency })
   currency: Currency = Currency.Usd;
 
-  @Column()
+  @Column({ type: 'double precision' })
   currencyAmount: number = 0;
 
   @Column()
