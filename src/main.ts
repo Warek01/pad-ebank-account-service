@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { AppModule } from './app.module';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 async function bootstrap() {
   const protosPath = path.join(__dirname, 'proto');
@@ -24,6 +25,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
   });
 
+  app.useWebSocketAdapter(new WsAdapter());
   await app.listen();
 }
 

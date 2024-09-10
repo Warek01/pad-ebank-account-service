@@ -1,8 +1,8 @@
-import grpc, { Metadata } from '@grpc/grpc-js';
-import { Controller, forwardRef, Inject } from '@nestjs/common';
+import { Metadata } from '@grpc/grpc-js';
+import { Controller } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RpcException } from '@nestjs/microservices';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import bcrypt from 'bcryptjs';
 
 import {
@@ -29,6 +29,12 @@ import { Card, User } from '@ebank-account/entities';
 import { CardService } from '@ebank-account/card/card.service';
 import { CurrencyService } from '@ebank-account/currency/currency.service';
 import { Currency } from '@ebank-account/enums/currency';
+import {
+  AccountEvent,
+  BalanceUpdatePayload,
+  BlockStatusUpdatePayload,
+  CurrencyUpdatePayload,
+} from '@ebank-account/types/events';
 
 @Controller('account')
 @AccountServiceControllerMethods()
@@ -38,10 +44,9 @@ export class AccountController implements AccountServiceController {
     private readonly cardRepo: Repository<Card>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @Inject(forwardRef(() => CardService))
     private readonly cardService: CardService,
-    @Inject(forwardRef(() => CurrencyService))
     private readonly currencyService: CurrencyService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async addCurrency(
@@ -62,6 +67,7 @@ export class AccountController implements AccountServiceController {
     }
 
     const currencyForAdding = this.protoCurrencyToCurrency(request.currency);
+    const oldAmount = card.currencyAmount;
 
     card.currencyAmount +=
       card.currency === currencyForAdding
@@ -73,6 +79,12 @@ export class AccountController implements AccountServiceController {
           );
 
     await this.cardRepo.save(card);
+
+    this.eventEmitter.emit(AccountEvent.BalanceUpdate, {
+      cardCode: card.code,
+      oldValue: oldAmount,
+      newValue: card.currencyAmount,
+    } as BalanceUpdatePayload);
 
     return {
       error: null,
@@ -99,6 +111,12 @@ export class AccountController implements AccountServiceController {
     card.isBlocked = true;
 
     await this.cardRepo.save(card);
+
+    this.eventEmitter.emit(AccountEvent.BlockStatusUpdate, {
+      cardCode: card.code,
+      oldValue: !card.isBlocked,
+      newValue: card.isBlocked,
+    } as BlockStatusUpdatePayload);
 
     return {
       error: null,
@@ -142,13 +160,16 @@ export class AccountController implements AccountServiceController {
     });
 
     if (!card) {
-      throw new RpcException({
-        code: grpc.status.NOT_FOUND,
-        message: 'card not found',
-      });
+      return {
+        error: {
+          code: ServiceErrorCode.NOT_FOUND,
+          message: 'card not found',
+        },
+      };
     }
 
     const newCurrency = this.protoCurrencyToCurrency(request.currency);
+    const oldCurrency = card.currency;
     const newAmount = this.currencyService.convert(
       card.currencyAmount,
       card.currency,
@@ -158,6 +179,12 @@ export class AccountController implements AccountServiceController {
     card.currency = newCurrency;
     card.currencyAmount = newAmount;
     await this.cardRepo.save(card);
+
+    this.eventEmitter.emit(AccountEvent.CurrencyUpdate, {
+      cardCode: card.code,
+      oldValue: oldCurrency,
+      newValue: newCurrency,
+    } as CurrencyUpdatePayload);
 
     return {
       error: null,
@@ -286,6 +313,12 @@ export class AccountController implements AccountServiceController {
     card.isBlocked = false;
 
     await this.cardRepo.save(card);
+
+    this.eventEmitter.emit(AccountEvent.BlockStatusUpdate, {
+      cardCode: card.code,
+      oldValue: !card.isBlocked,
+      newValue: card.isBlocked,
+    } as BlockStatusUpdatePayload);
 
     return {
       error: null,

@@ -7,6 +7,7 @@ import { AccountModule } from './account/account.module';
 import { CardModule } from './card/card.module';
 import { AppEnv } from './types/app-env';
 import { CurrencyModule } from './currency/currency.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CurrencyModule } from './currency/currency.module';
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
+    EventEmitterModule.forRoot({ global: true }),
     AccountModule,
     CardModule,
     CurrencyModule,
@@ -37,4 +39,5 @@ import { CurrencyModule } from './currency/currency.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule {
+}
