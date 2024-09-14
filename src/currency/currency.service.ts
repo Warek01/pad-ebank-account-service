@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Currency } from '@ebank-account/enums/currency';
+import { Currency } from '@/enums/currency';
 
 @Injectable()
 export class CurrencyService {

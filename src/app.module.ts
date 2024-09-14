@@ -8,6 +8,7 @@ import { CardModule } from './card/card.module';
 import { AppEnv } from './types/app-env';
 import { CurrencyModule } from './currency/currency.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { HealthModule } from '@/health/health-module';
 
 @Module({
   imports: [
@@ -35,9 +36,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AccountModule,
     CardModule,
     CurrencyModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {
-}
+export class AppModule {}

@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 
 import { User } from './user.entity';
-import { Currency } from '@ebank-account/enums/currency';
+import { Currency } from '@/enums/currency';
 
 @Entity('cards')
 export class Card {

@@ -1,4 +1,4 @@
-import { Currency } from '@ebank-account/enums/currency';
+import { Currency } from '@/enums/currency';
 
 export const enum AccountEvent {
   BalanceUpdate = 'balance.update',

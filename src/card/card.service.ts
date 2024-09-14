@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Card, User } from '@ebank-account/entities';
+import { Card, User } from '@/entities';
 
 @Injectable()
 export class CardService {

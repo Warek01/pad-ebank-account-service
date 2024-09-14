@@ -4,11 +4,12 @@ import {
   WebSocketGateway,
   WsResponse,
 } from '@nestjs/websockets';
+import 'dotenv/config';
 
 import { WsLobbySubscribeRequest, WsLobbySubscribeResponse } from './types';
-import { AccountWsEvent } from '@ebank-account/account/gateways/enums';
+import { AccountWsEvent } from '@/account/gateways/enums';
 
-@WebSocketGateway(3001, { path: '/account' })
+@WebSocketGateway(parseInt(process.env.WS_PORT), { path: '/account' })
 export class AccountLobbyGateway {
   @SubscribeMessage(AccountWsEvent.Echo)
   echo(@MessageBody() data: string): string {

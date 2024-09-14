@@ -22,19 +22,21 @@ import {
   RegisterCredentials,
   TransactionData,
   UnblockCardResult,
-} from '@ebank-account/generated/proto/account_service';
-import { Currency as ProtoCurrency } from '@ebank-account/generated/proto/currency';
-import { ServiceErrorCode } from '@ebank-account/generated/proto/error';
-import { Card, User } from '@ebank-account/entities';
-import { CardService } from '@ebank-account/card/card.service';
-import { CurrencyService } from '@ebank-account/currency/currency.service';
-import { Currency } from '@ebank-account/enums/currency';
+} from '@/generated/proto/account_service';
+import {
+  Currency as ProtoCurrency,
+  ServiceErrorCode,
+} from '@/generated/proto/shared';
+import { Card, User } from '@/entities';
+import { CardService } from '@/card/card.service';
+import { CurrencyService } from '@/currency/currency.service';
+import { Currency } from '@/enums/currency';
 import {
   AccountEvent,
   BalanceUpdatePayload,
   BlockStatusUpdatePayload,
   CurrencyUpdatePayload,
-} from '@ebank-account/types/events';
+} from '@/types/events';
 
 @Controller('account')
 @AccountServiceControllerMethods()
@@ -54,13 +56,13 @@ export class AccountController implements AccountServiceController {
     metadata?: Metadata,
   ): Promise<AddCurrencyResult> {
     const card = await this.cardRepo.findOneBy({
-      code: request.cardIdentifier?.cardCode,
+      code: request.cardCode,
     });
 
     if (!card) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ServiceErrorCode.BAD_REQUEST,
           message: 'card not found',
         },
       };
@@ -128,7 +130,7 @@ export class AccountController implements AccountServiceController {
     metadata?: Metadata,
   ): Promise<CanPerformTransactionResult> {
     const card = await this.cardRepo.findOneBy({
-      code: request.cardIdentifier?.cardCode,
+      code: request.cardCode,
     });
 
     if (!card) {
@@ -156,7 +158,7 @@ export class AccountController implements AccountServiceController {
     metadata?: Metadata,
   ): Promise<ChangeCurrencyResult> {
     const card = await this.cardRepo.findOneBy({
-      code: request.cardIdentifier?.cardCode,
+      code: request.cardCode,
     });
 
     if (!card) {

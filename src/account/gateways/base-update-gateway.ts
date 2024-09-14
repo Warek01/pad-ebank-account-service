@@ -3,11 +3,11 @@ import {
   MessageBody,
   SubscribeMessage,
 } from '@nestjs/websockets';
-import { AccountWsEvent } from '@ebank-account/account/gateways/enums';
+import { AccountWsEvent } from '@/account/gateways/enums';
 import {
   WsSubscriptionRequest,
   WsSubscriptionUpdate,
-} from '@ebank-account/account/gateways/types';
+} from '@/account/gateways/types';
 import { WebSocket } from 'ws';
 
 export abstract class BaseUpdateGateway {

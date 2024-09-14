@@ -1,10 +1,4 @@
-import {
-  Column,
-  Entity,
-  OneToOne,
-  PrimaryColumn,
-  Relation,
-} from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryColumn, Relation } from 'typeorm';
 
 import { Card } from './card.entity';
 
