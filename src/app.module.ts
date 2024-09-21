@@ -9,6 +9,7 @@ import { AppEnv } from './types/app-env';
 import { CurrencyModule } from './currency/currency.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { HealthModule } from '@/health/health-module';
+import { ServiceDiscoveryModule } from './service-discovery/service-discovery.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { HealthModule } from '@/health/health-module';
     CardModule,
     CurrencyModule,
     HealthModule,
+    ServiceDiscoveryModule,
   ],
   controllers: [],
   providers: [],
