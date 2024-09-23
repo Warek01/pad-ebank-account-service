@@ -8,9 +8,9 @@ import { CurrencyModule } from '@/currency/currency.module';
 import { AccountController } from './account.controller';
 import {
   AccountBalanceGateway,
-  AccountLobbyGateway,
-  AccountCurrencyGateway,
   AccountBlockStatusGateway,
+  AccountCurrencyGateway,
+  AccountLobbyGateway,
 } from './gateways';
 
 @Module({
