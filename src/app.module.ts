@@ -20,6 +20,9 @@ import { AppEnv } from '@/types/app-env';
 import { CurrencyModule } from '@/currency/currency.module';
 import { ServiceDiscoveryModule } from '@/service-discovery/service-discovery.module';
 import { AppController } from '@/app.controller';
+import { ConcurrencyModule } from './concurrency/concurrency.module';
+import { ConcurrencyInterceptor } from '@/concurrency/concurrency.interceptor';
+import { ThrottlingModule } from './throttling/throttling.module';
 
 @Module({
   imports: [
@@ -52,7 +55,7 @@ import { AppController } from '@/app.controller';
           limit: 100,
         },
         {
-          name: 'throttle-test',
+          name: 'short',
           ttl: seconds(10),
           limit: 5,
         },
@@ -64,6 +67,8 @@ import { AppController } from '@/app.controller';
     CurrencyModule,
     HealthModule,
     ServiceDiscoveryModule,
+    ConcurrencyModule,
+    ThrottlingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -73,11 +78,15 @@ import { AppController } from '@/app.controller';
     },
     {
       provide: APP_INTERCEPTOR,
-      useValue: new TimeoutInterceptor(seconds(10)),
+      useClass: LoggingInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
+      useClass: ConcurrencyInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useValue: new TimeoutInterceptor(seconds(10)),
     },
   ],
 })

@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Card, User } from '@/entities';
 import { CardModule } from '@/card/card.module';
 import { CurrencyModule } from '@/currency/currency.module';
+import { ThrottlingModule } from '@/throttling/throttling.module';
+import { ConcurrencyModule } from '@/concurrency/concurrency.module';
 
 import { AccountController } from './account.controller';
 import {
@@ -14,7 +16,13 @@ import {
 } from './gateways';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Card, User]), CardModule, CurrencyModule],
+  imports: [
+    TypeOrmModule.forFeature([Card, User]),
+    CardModule,
+    CurrencyModule,
+    ConcurrencyModule,
+    ThrottlingModule,
+  ],
   exports: [],
   providers: [
     AccountLobbyGateway,

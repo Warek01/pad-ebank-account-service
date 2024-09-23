@@ -1,5 +1,5 @@
 import { Metadata } from '@grpc/grpc-js';
-import { Controller } from '@nestjs/common';
+import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -37,9 +37,13 @@ import {
   BlockStatusUpdatePayload,
   CurrencyUpdatePayload,
 } from '@/types/events';
+import { ThrottlingGrpcGuard } from '@/throttling/throttling.grpc.guard';
+import { ConcurrencyGrpcInterceptor } from '@/concurrency/concurrency.grpc.interceptor';
 
 @Controller('account')
 @AccountServiceControllerMethods()
+@UseGuards(ThrottlingGrpcGuard)
+@UseInterceptors(ConcurrencyGrpcInterceptor)
 export class AccountController implements AccountServiceController {
   constructor(
     @InjectRepository(Card)
