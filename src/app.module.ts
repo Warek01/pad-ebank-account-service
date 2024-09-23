@@ -2,14 +2,16 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+
+import { HealthModule } from '@/health/health-module';
 
 import { AccountModule } from './account/account.module';
 import { CardModule } from './card/card.module';
 import { AppEnv } from './types/app-env';
 import { CurrencyModule } from './currency/currency.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { HealthModule } from '@/health/health-module';
 import { ServiceDiscoveryModule } from './service-discovery/service-discovery.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -40,7 +42,7 @@ import { ServiceDiscoveryModule } from './service-discovery/service-discovery.mo
     HealthModule,
     ServiceDiscoveryModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}

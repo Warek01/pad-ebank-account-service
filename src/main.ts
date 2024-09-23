@@ -13,6 +13,7 @@ import { ACCOUNT_SERVICE_PACKAGE_NAME } from '@/generated/proto/account_service'
 import { AppModule } from '@/app.module';
 import { LoggingInterceptor } from '@/interceptors/logging.interceptor';
 import { AppEnv } from '@/types/app-env';
+import { TimeoutInterceptor } from '@/interceptors/timeout.interceptor';
 
 async function bootstrap() {
   const logger = new Logger(bootstrap.name, { timestamp: true });
@@ -53,6 +54,7 @@ async function bootstrap() {
   };
 
   app.connectMicroservice(accountGrpcOptions);
+  app.useGlobalInterceptors(new TimeoutInterceptor(3000));
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useWebSocketAdapter(new WsAdapter());
 
