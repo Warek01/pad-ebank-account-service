@@ -41,6 +41,7 @@ async function bootstrap() {
     options: {
       protoPath: protoFiles,
       loader: {
+        defaults: true,
         includeDirs: [protosPath],
       },
       package: ACCOUNT_SERVICE_PACKAGE_NAME,

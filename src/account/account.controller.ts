@@ -39,11 +39,13 @@ import {
 } from '@/types/events';
 import { ThrottlingGrpcGuard } from '@/throttling/throttling.grpc.guard';
 import { ConcurrencyGrpcInterceptor } from '@/concurrency/concurrency.grpc.interceptor';
+import { LoggingGrpcInterceptor } from '@/interceptors/logging.grpc.interceptor';
 
 @Controller('account')
 @AccountServiceControllerMethods()
 @UseGuards(ThrottlingGrpcGuard)
 @UseInterceptors(ConcurrencyGrpcInterceptor)
+@UseInterceptors(LoggingGrpcInterceptor)
 export class AccountController implements AccountServiceController {
   constructor(
     @InjectRepository(Card)
