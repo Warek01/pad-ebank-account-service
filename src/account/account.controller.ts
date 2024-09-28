@@ -23,14 +23,10 @@ import {
   TransactionData,
   UnblockCardResult,
 } from '@/generated/proto/account_service';
-import {
-  Currency as ProtoCurrency,
-  ServiceErrorCode,
-} from '@/generated/proto/shared';
+import { ServiceErrorCode } from '@/generated/proto/shared';
 import { Card, User } from '@/entities';
 import { CardService } from '@/card/card.service';
 import { CurrencyService } from '@/currency/currency.service';
-import { Currency } from '@/enums/currency';
 import {
   AccountEvent,
   BalanceUpdatePayload,
@@ -74,7 +70,7 @@ export class AccountController implements AccountServiceController {
       };
     }
 
-    const currencyForAdding = this.protoCurrencyToCurrency(request.currency);
+    const currencyForAdding = request.currency;
     const oldAmount = card.currencyAmount;
 
     card.currencyAmount +=
@@ -150,7 +146,7 @@ export class AccountController implements AccountServiceController {
 
     const requestedAmount = this.currencyService.convert(
       request.amount,
-      this.protoCurrencyToCurrency(request.currency),
+      request.currency,
       card.currency,
     );
 
@@ -176,7 +172,7 @@ export class AccountController implements AccountServiceController {
       };
     }
 
-    const newCurrency = this.protoCurrencyToCurrency(request.currency);
+    const newCurrency = request.currency;
     const oldCurrency = card.currency;
     const newAmount = this.currencyService.convert(
       card.currencyAmount,
@@ -331,29 +327,5 @@ export class AccountController implements AccountServiceController {
     return {
       error: null,
     };
-  }
-
-  private protoCurrencyToCurrency(currency: ProtoCurrency): Currency {
-    switch (currency) {
-      case ProtoCurrency.EUR:
-        return Currency.Eur;
-      case ProtoCurrency.MDL:
-        return Currency.Mdl;
-      case ProtoCurrency.USD:
-        return Currency.Usd;
-      default:
-        throw new Error('unknown currency');
-    }
-  }
-
-  private currencyToProtoCurrency(currency: Currency): ProtoCurrency {
-    switch (currency) {
-      case Currency.Eur:
-        return ProtoCurrency.EUR;
-      case Currency.Mdl:
-        return ProtoCurrency.MDL;
-      case Currency.Usd:
-        return ProtoCurrency.USD;
-    }
   }
 }

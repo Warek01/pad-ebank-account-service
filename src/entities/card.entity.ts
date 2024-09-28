@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 
 import { User } from './user.entity';
-import { Currency } from '@/enums/currency';
+import { Currency } from '@/generated/proto/shared';
 
 @Entity('cards')
 export class Card {
@@ -19,7 +19,7 @@ export class Card {
   cvv: string;
 
   @Column({ type: 'enum', enum: Currency })
-  currency: Currency = Currency.Usd;
+  currency: Currency = Currency.USD;
 
   @Column({ type: 'double precision' })
   currencyAmount: number = 0;

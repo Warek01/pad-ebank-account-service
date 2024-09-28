@@ -1,8 +1,8 @@
 {
   "name": "pad-ebank-account-service",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Account microservice of eBank",
+  "author": "warek",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -16,7 +16,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "generate:grpc": "bash ./generate-protobuf.sh"
+    "generate:grpc": "bash generate-protobuf.sh"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.11.3",
