@@ -4,6 +4,7 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
+    "typeCheck": true,
     "assets": ["proto/**/*.proto"],
     "watchAssets": true,
     "builder": "swc"

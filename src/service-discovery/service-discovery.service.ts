@@ -44,13 +44,19 @@ export class ServiceDiscoveryService implements OnModuleInit {
       },
     };
 
+    const retryInterval = parseInt(
+      this.config.get('SERVICE_DISCOVERY_RETRY_INTERVAL'),
+    );
+    const requestTimeout = parseInt(
+      this.config.get('SERVICE_DISCOVERY_REQUEST_TIMEOUT'),
+    );
     const requestUrl =
       this.config.get('SERVICE_DISCOVERY_HTTP_URL') + '/api/service/register';
 
     try {
       await firstValueFrom(
         this.http.post(requestUrl, data, {
-          timeout: 5000,
+          timeout: requestTimeout,
         }),
       );
 
@@ -63,7 +69,7 @@ export class ServiceDiscoveryService implements OnModuleInit {
         return;
       }
 
-      await new Promise((res) => setTimeout(res, 5000));
+      await new Promise((res) => setTimeout(res, retryInterval));
       await this.registerService(retryAttempts - 1);
     }
   }

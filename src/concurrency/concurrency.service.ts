@@ -5,8 +5,8 @@ import { AppEnv } from '@/types/app-env';
 
 @Injectable()
 export class ConcurrencyService {
-  private readonly maxRunningTasks: number;
   runningTasksCount = 0;
+  private readonly maxRunningTasks: number;
 
   constructor(private readonly config: ConfigService<AppEnv>) {
     this.maxRunningTasks = parseInt(config.get('MAX_CONCURRENT_TASKS'));
@@ -21,6 +21,6 @@ export class ConcurrencyService {
   }
 
   unregister() {
-    this.runningTasksCount--;
+    this.runningTasksCount = Math.max(this.runningTasksCount - 1, 0);
   }
 }
