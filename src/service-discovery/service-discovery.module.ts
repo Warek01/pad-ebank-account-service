@@ -1,20 +1,30 @@
-import { Module, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Module,
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
-import { ServiceDiscoveryService } from './service-discovery.service';
+import { ServiceDiscoveryService } from '@/service-discovery/service-discovery.service';
 
 @Module({
   imports: [HttpModule],
-  exports: [],
+  exports: [ServiceDiscoveryService],
   providers: [ServiceDiscoveryService],
   controllers: [],
 })
-export class ServiceDiscoveryModule implements OnApplicationBootstrap {
+export class ServiceDiscoveryModule
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   constructor(
     private readonly serviceDiscoveryService: ServiceDiscoveryService,
   ) {}
 
-  async onApplicationBootstrap() {
+  async onApplicationBootstrap(): Promise<void> {
     await this.serviceDiscoveryService.registerService();
+  }
+
+  async onApplicationShutdown(signal: string): Promise<void> {
+    await this.serviceDiscoveryService.unregisterService();
   }
 }

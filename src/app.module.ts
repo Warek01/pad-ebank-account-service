@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -20,21 +20,23 @@ import { AppEnv } from '@/types/app-env';
 import { CurrencyModule } from '@/currency/currency.module';
 import { ServiceDiscoveryModule } from '@/service-discovery/service-discovery.module';
 import { AppController } from '@/app.controller';
-import { ConcurrencyModule } from './concurrency/concurrency.module';
+import { ConcurrencyModule } from '@/concurrency/concurrency.module';
 import { ConcurrencyInterceptor } from '@/concurrency/concurrency.interceptor';
-import { ThrottlingModule } from './throttling/throttling.module';
+import { ThrottlingModule } from '@/throttling/throttling.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      cache: false,
+      cache: true,
       isGlobal: true,
       envFilePath: ['.env', '.env.development', '.env.production'],
       expandVariables: true,
+      ignoreEnvVars: false,
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (conf: ConfigService<AppEnv>) => ({
+      useFactory: (conf: ConfigService<AppEnv>): TypeOrmModuleOptions => ({
         type: 'postgres',
         host: conf.get('DB_HOST'),
         port: conf.get('DB_PORT'),
@@ -42,7 +44,7 @@ import { ThrottlingModule } from './throttling/throttling.module';
         username: conf.get('DB_USER'),
         password: conf.get('DB_PASSWORD'),
         entities: ['**/*.entity.js'],
-        synchronize: true,
+        synchronize: conf.get('NODE_ENV') === 'development',
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),

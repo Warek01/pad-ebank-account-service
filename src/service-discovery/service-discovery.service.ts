@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -6,42 +6,53 @@ import { v4 as uuid } from 'uuid';
 
 import { AppEnv } from '@/types/app-env';
 import { ACCOUNT_SERVICE_NAME } from '@/generated/proto/account_service';
-
-import { ServiceDiscoveryRequest } from './service-discovery.types';
+import {
+  ServiceDiscoveryRequest,
+  ServiceInstance,
+} from '@/service-discovery/service-discovery.types';
 
 @Injectable()
-export class ServiceDiscoveryService implements OnModuleInit {
+export class ServiceDiscoveryService {
   healthcheckInterval: number = 60;
+
   private readonly logger = new Logger(ServiceDiscoveryService.name);
+  private readonly id: string;
 
   constructor(
     private readonly http: HttpService,
     private readonly config: ConfigService<AppEnv>,
-  ) {}
-
-  onModuleInit() {
+  ) {
     this.healthcheckInterval = parseInt(
       this.config.get('SERVICE_DISCOVERY_HEALTHCHECK_INTERVAL'),
     );
+    this.id = uuid();
+  }
+
+  async getInstances(serviceName: string): Promise<ServiceInstance[]> {
+    const url =
+      this.config.get('SERVICE_DISCOVERY_HTTP_URL') +
+      `/api/service/${serviceName}`;
+
+    const res = await firstValueFrom(this.http.get<ServiceInstance[]>(url));
+
+    return res.data;
   }
 
   async registerService(retryAttempts = 5): Promise<void> {
     const hostname = this.config.get('HOSTNAME');
-    const grpcPort = parseInt(this.config.get('ACCOUNT_SERVICE_GRPC_PORT'));
+    const grpcPort = this.config.get('GRPC_PORT');
     const serviceUrl = `${hostname}:${grpcPort}`;
 
     const httpPort = parseInt(this.config.get('HTTP_PORT'));
     const httpScheme = this.config.get('HTTP_SCHEME');
-    const healthcheckUrl = `${httpScheme}://${hostname}:${httpPort}/health`;
+    const healthCheckUrl = `${httpScheme}://${hostname}:${httpPort}/health`;
 
     const data: ServiceDiscoveryRequest = {
-      serviceName: ACCOUNT_SERVICE_NAME,
-      serviceId: uuid(),
+      name: ACCOUNT_SERVICE_NAME,
+      id: this.id,
       url: serviceUrl,
-      healthcheck: {
-        url: healthcheckUrl,
-        checkInterval: this.healthcheckInterval,
-      },
+      healthCheckUrl: healthCheckUrl,
+      healthCheckInterval: this.healthcheckInterval,
     };
 
     const retryInterval = parseInt(
@@ -51,7 +62,7 @@ export class ServiceDiscoveryService implements OnModuleInit {
       this.config.get('SERVICE_DISCOVERY_REQUEST_TIMEOUT'),
     );
     const requestUrl =
-      this.config.get('SERVICE_DISCOVERY_HTTP_URL') + '/api/service/register';
+      this.config.get('SERVICE_DISCOVERY_HTTP_URL') + '/api/v1/registry';
 
     try {
       await firstValueFrom(
@@ -72,5 +83,14 @@ export class ServiceDiscoveryService implements OnModuleInit {
       await new Promise((res) => setTimeout(res, retryInterval));
       await this.registerService(retryAttempts - 1);
     }
+  }
+
+  async unregisterService() {
+    const requestUrl =
+      this.config.get('SERVICE_DISCOVERY_HTTP_URL') +
+      '/api/v1/registry/' +
+      this.id;
+
+    await firstValueFrom(this.http.delete(requestUrl));
   }
 }
