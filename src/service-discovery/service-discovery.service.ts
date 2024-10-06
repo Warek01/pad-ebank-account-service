@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { v4 as uuid } from 'uuid';
 
 import { AppEnv } from '@/types/app-env';
 import { ACCOUNT_SERVICE_NAME } from '@/generated/proto/account_service';
@@ -16,7 +15,7 @@ export class ServiceDiscoveryService {
   healthcheckInterval: number = 60;
 
   private readonly logger = new Logger(ServiceDiscoveryService.name);
-  private readonly id: string;
+  private readonly hostname: string;
 
   constructor(
     private readonly http: HttpService,
@@ -25,7 +24,7 @@ export class ServiceDiscoveryService {
     this.healthcheckInterval = parseInt(
       this.config.get('SERVICE_DISCOVERY_HEALTHCHECK_INTERVAL'),
     );
-    this.id = uuid();
+    this.hostname = this.config.get('HOSTNAME');
   }
 
   async getInstances(serviceName: string): Promise<ServiceInstance[]> {
@@ -39,18 +38,18 @@ export class ServiceDiscoveryService {
   }
 
   async registerService(retryAttempts = 5): Promise<void> {
-    const hostname = this.config.get('HOSTNAME');
     const grpcPort = this.config.get('GRPC_PORT');
-    const serviceUrl = `${hostname}:${grpcPort}`;
+    const grpcScheme = this.config.get('GRPC_SCHEME');
 
     const httpPort = parseInt(this.config.get('HTTP_PORT'));
     const httpScheme = this.config.get('HTTP_SCHEME');
-    const healthCheckUrl = `${httpScheme}://${hostname}:${httpPort}/health`;
+    const healthCheckUrl = `${httpScheme}://${this.hostname}:${httpPort}/health`;
 
     const data: ServiceDiscoveryRequest = {
       name: ACCOUNT_SERVICE_NAME,
-      id: this.id,
-      url: serviceUrl,
+      host: this.hostname,
+      port: grpcPort,
+      scheme: grpcScheme,
       healthCheckUrl: healthCheckUrl,
       healthCheckInterval: this.healthcheckInterval,
     };
@@ -89,7 +88,7 @@ export class ServiceDiscoveryService {
     const requestUrl =
       this.config.get('SERVICE_DISCOVERY_HTTP_URL') +
       '/api/v1/registry/' +
-      this.id;
+      this.hostname;
 
     await firstValueFrom(this.http.delete(requestUrl));
   }

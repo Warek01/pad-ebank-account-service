@@ -5,9 +5,9 @@ import { of, throwError } from 'rxjs';
 import { Logger } from '@nestjs/common';
 
 import { configServiceMockProvider } from '@/test/mocks/config-service.mock';
-
-import { ServiceDiscoveryService } from './service-discovery.service';
+import { ServiceDiscoveryService } from '@/service-discovery/service-discovery.service';
 import { AppEnv } from '@/types/app-env';
+import { ServiceDiscoveryRequest } from '@/service-discovery/service-discovery.types';
 
 const mockHttpService = {
   post: jest.fn(),
@@ -49,15 +49,14 @@ describe('ServiceDiscoveryService', () => {
     await service.registerService();
 
     expect(http.post).toHaveBeenCalledWith(
-      'http://discovery-service/api/service/register',
-      expect.objectContaining({
-        serviceName: expect.any(String),
-        serviceId: expect.any(String),
-        url: 'localhost:50051',
-        healthcheck: {
-          url: 'http://localhost:3000/health',
-          checkInterval: 60,
-        },
+      'http://service-discovery/api/v1/registry',
+      expect.objectContaining<ServiceDiscoveryRequest>({
+        name: 'AccountService',
+        host: 'localhost',
+        port: '50051',
+        scheme: 'http',
+        healthCheckUrl: 'http://localhost:3000/health',
+        healthCheckInterval: 60,
       }),
       { timeout: requestTimeout },
     );

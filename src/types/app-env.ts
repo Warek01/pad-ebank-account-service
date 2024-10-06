@@ -24,6 +24,7 @@ export interface AppEnv {
 
   GRPC_HOST: string;
   GRPC_PORT: string;
+  GRPC_SCHEME: string;
   GRPC_RATE_LIMIT_TTL: string;
   GRPC_RATE_LIMIT_LIMIT: string;
 }

@@ -1,7 +1,8 @@
 export interface ServiceDiscoveryRequest {
   name: string;
-  id: string;
-  url: string;
+  host: string;
+  port: string;
+  scheme: string;
   healthCheckUrl: string;
   healthCheckInterval: number;
 }
