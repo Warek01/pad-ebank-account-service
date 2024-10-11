@@ -30,7 +30,7 @@ export class ServiceDiscoveryService {
   async getInstances(serviceName: string): Promise<ServiceInstance[]> {
     const url =
       this.config.get('SERVICE_DISCOVERY_HTTP_URL') +
-      `/api/service/${serviceName}`;
+      `/api/v1/registry/${serviceName}`;
 
     const res = await firstValueFrom(this.http.get<ServiceInstance[]>(url));
 
