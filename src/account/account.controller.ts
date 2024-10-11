@@ -3,6 +3,8 @@ import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RpcException } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcryptjs';
 
 import {
@@ -35,19 +37,21 @@ import {
 } from '@/types/events';
 import { ThrottlingGrpcGuard } from '@/throttling/throttling.grpc.guard';
 import { ConcurrencyGrpcInterceptor } from '@/concurrency/concurrency.grpc.interceptor';
-import { LoggingGrpcInterceptor } from '@/interceptors/logging.grpc.interceptor';
+import { AppEnv } from '@/types/app-env';
+import { LoggingInterceptor } from '@/interceptors/logging.interceptor';
 
 @Controller('account')
 @AccountServiceControllerMethods()
 @UseGuards(ThrottlingGrpcGuard)
 @UseInterceptors(ConcurrencyGrpcInterceptor)
-@UseInterceptors(LoggingGrpcInterceptor)
+@UseInterceptors(LoggingInterceptor)
 export class AccountController implements AccountServiceController {
   constructor(
     @InjectRepository(Card)
     private readonly cardRepo: Repository<Card>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly config: ConfigService<AppEnv>,
     private readonly cardService: CardService,
     private readonly currencyService: CurrencyService,
     private readonly eventEmitter: EventEmitter2,
@@ -224,6 +228,12 @@ export class AccountController implements AccountServiceController {
     request: LoginCredentials,
     metadata?: Metadata,
   ): Promise<AuthResult> {
+    // Circuit breaker test
+    if (this.config.get('UNHEALTHY') === 'true') {
+      // await sleep(60_000);
+      throw new RpcException('Account Service Unavailable');
+    }
+
     const user = await this.userRepo.findOneBy({
       email: request.email,
     });
@@ -263,6 +273,12 @@ export class AccountController implements AccountServiceController {
     request: RegisterCredentials,
     metadata?: Metadata,
   ): Promise<AuthResult> {
+    // Circuit breaker test
+    if (this.config.get('UNHEALTHY') === 'true') {
+      // await sleep(60_000);
+      throw new RpcException('Account Service Unavailable');
+    }
+
     const alreadyExists = await this.userRepo.exists({
       where: { email: request.email },
     });

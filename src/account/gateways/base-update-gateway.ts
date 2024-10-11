@@ -3,12 +3,13 @@ import {
   MessageBody,
   SubscribeMessage,
 } from '@nestjs/websockets';
+import { WebSocket } from 'ws';
+
 import { AccountWsEvent } from '@/account/gateways/enums';
 import {
   WsSubscriptionRequest,
   WsSubscriptionUpdate,
 } from '@/account/gateways/types';
-import { WebSocket } from 'ws';
 
 export abstract class BaseUpdateGateway {
   protected readonly socketMap = new Map<string, Set<WebSocket>>();

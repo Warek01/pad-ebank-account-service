@@ -28,6 +28,7 @@ async function bootstrap() {
   const httpHost = config.get('HTTP_HOST');
   const grpcHost = config.get('GRPC_HOST');
   const grpcPort = config.get('GRPC_PORT');
+  const hostname = config.get('HOSTNAME');
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('eBank account service')
@@ -63,6 +64,8 @@ async function bootstrap() {
       logger.log(`HTTP listening to ${httpHost}:${httpPort}`),
     ),
   ]);
+
+  logger.log(`========== Container hostname: ${hostname} ==========`);
 }
 
 bootstrap();

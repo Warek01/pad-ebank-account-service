@@ -5,11 +5,17 @@ import {
   WsResponse,
 } from '@nestjs/websockets';
 import 'dotenv/config';
+import { UseInterceptors } from '@nestjs/common';
 
-import { WsLobbySubscribeRequest, WsLobbySubscribeResponse } from './types';
+import {
+  WsLobbySubscribeRequest,
+  WsLobbySubscribeResponse,
+} from '@/account/gateways/types';
 import { AccountWsEvent } from '@/account/gateways/enums';
+import { LoggingInterceptor } from '@/interceptors/logging.interceptor';
 
 @WebSocketGateway(parseInt(process.env.WS_PORT), { path: '/account' })
+@UseInterceptors(LoggingInterceptor)
 export class AccountLobbyGateway {
   @SubscribeMessage(AccountWsEvent.Echo)
   echo(@MessageBody() data: string): string {

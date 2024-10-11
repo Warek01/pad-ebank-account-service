@@ -22,6 +22,8 @@ export interface AppEnv {
 
   MAX_CONCURRENT_TASKS: string;
 
+  UNHEALTHY: string;
+
   GRPC_HOST: string;
   GRPC_PORT: string;
   GRPC_SCHEME: string;
