@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { GrpcOptions, Transport } from '@nestjs/microservices';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { ConfigService } from '@nestjs/config';
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication, Logger, ShutdownSignal } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Express } from 'express';
 import fs from 'fs/promises';
@@ -55,6 +55,7 @@ async function bootstrap() {
     allowedHeaders: '*',
     methods: '*',
   });
+  app.enableShutdownHooks([ShutdownSignal.SIGTERM, ShutdownSignal.SIGINT]);
   app.connectMicroservice(accountGrpcOptions);
   app.useWebSocketAdapter(new WsAdapter());
 
