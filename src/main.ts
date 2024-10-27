@@ -17,11 +17,6 @@ async function bootstrap() {
   const logger = new Logger(bootstrap.name, { timestamp: true });
   const app = await NestFactory.create<INestApplication<Express>>(AppModule, {
     logger,
-    cors: {
-      origin: '*',
-      allowedHeaders: '*',
-      methods: '*',
-    },
   });
   const config = app.get(ConfigService<AppEnv>);
   const httpPort = config.get('HTTP_PORT');
@@ -55,6 +50,11 @@ async function bootstrap() {
     transport: Transport.GRPC,
   };
 
+  app.enableCors({
+    origin: '*',
+    allowedHeaders: '*',
+    methods: '*',
+  });
   app.connectMicroservice(accountGrpcOptions);
   app.useWebSocketAdapter(new WsAdapter());
 
