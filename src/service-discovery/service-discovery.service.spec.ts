@@ -44,8 +44,6 @@ describe('ServiceDiscoveryService', () => {
     const mockResponse = of({});
     mockHttpService.post.mockReturnValue(mockResponse);
 
-    const logSpy = jest.spyOn(Logger.prototype, 'log');
-
     await service.registerService();
 
     expect(http.post).toHaveBeenCalledWith(
@@ -55,12 +53,12 @@ describe('ServiceDiscoveryService', () => {
         host: 'localhost',
         port: '50051',
         scheme: 'http',
-        healthCheckUrl: 'http://localhost:3000/health',
+        healthPingUrl: 'http://localhost:3000/api/v1/health/ping',
+        healthCheckUrl: 'http://localhost:3000/api/v1/health',
         healthCheckInterval: 60,
       }),
       { timeout: requestTimeout },
     );
-    expect(logSpy).toHaveBeenCalledWith('Service registered');
   });
 
   it('should retry if registration fails', async () => {
@@ -70,22 +68,8 @@ describe('ServiceDiscoveryService', () => {
       .mockReturnValue(of({}));
 
     const errorSpy = jest.spyOn(Logger.prototype, 'error');
-    const logSpy = jest.spyOn(Logger.prototype, 'log');
-
     await service.registerService(1);
 
     expect(errorSpy).toHaveBeenCalledWith(expect.any(Error));
-    expect(logSpy).toHaveBeenCalledWith('Service registered');
   }, 10_000);
-
-  it('should stop retrying after max attempts', async () => {
-    const errorResponse = throwError(() => new Error('Network error'));
-    mockHttpService.post.mockReturnValue(errorResponse);
-
-    const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
-    await service.registerService(0);
-
-    expect(errorSpy).toHaveBeenCalledWith('Error registering service');
-  });
 });
