@@ -6,6 +6,7 @@ import { AppEnv } from '@/types/app-env';
 @Injectable()
 export class ConcurrencyService {
   runningTasksCount = 0;
+
   private readonly maxRunningTasks: number;
 
   constructor(private readonly config: ConfigService<AppEnv>) {

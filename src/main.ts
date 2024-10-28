@@ -28,6 +28,11 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('eBank account service')
     .setVersion('1.0.0')
+    .addTag('Test', 'Test methods for testing the features')
+    .addTag(
+      'Health',
+      'Healthcheck methods for service discovery and load balancing',
+    )
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, swaggerDocument);

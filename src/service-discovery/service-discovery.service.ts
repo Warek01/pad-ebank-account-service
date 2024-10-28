@@ -37,7 +37,7 @@ export class ServiceDiscoveryService {
     return res.data;
   }
 
-  async registerService(retryAttempts = 5): Promise<void> {
+  async registerService(retryAttempts = 5): Promise<boolean> {
     const grpcPort = this.config.get('GRPC_PORT');
     const grpcScheme = this.config.get('GRPC_SCHEME');
 
@@ -70,17 +70,16 @@ export class ServiceDiscoveryService {
         }),
       );
 
-      this.logger.log('Service registered');
+      return true;
     } catch (e) {
       this.logger.error(e);
 
       if (retryAttempts <= 0) {
-        this.logger.error('Error registering service');
-        return;
+        return false;
       }
 
       await new Promise((res) => setTimeout(res, retryInterval));
-      await this.registerService(retryAttempts - 1);
+      return await this.registerService(retryAttempts - 1);
     }
   }
 

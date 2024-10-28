@@ -1,4 +1,5 @@
 import {
+  Logger,
   Module,
   OnApplicationBootstrap,
   OnApplicationShutdown,
@@ -16,12 +17,23 @@ import { ServiceDiscoveryService } from '@/service-discovery/service-discovery.s
 export class ServiceDiscoveryModule
   implements OnApplicationBootstrap, OnApplicationShutdown
 {
+  private readonly logger = new Logger(ServiceDiscoveryModule.name);
+
   constructor(
     private readonly serviceDiscoveryService: ServiceDiscoveryService,
   ) {}
 
-  async onApplicationBootstrap(): Promise<void> {
-    await this.serviceDiscoveryService.registerService();
+  onApplicationBootstrap(): void {
+    this.serviceDiscoveryService.registerService().then((success) => {
+      if (success) {
+        this.logger.log('Service registered');
+      } else {
+        this.logger.error(
+          'Error registering service, shutting down application',
+        );
+        process.exit(1);
+      }
+    });
   }
 
   async onApplicationShutdown(signal: string): Promise<void> {

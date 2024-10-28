@@ -3,13 +3,8 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import {
-  minutes,
-  seconds,
-  ThrottlerGuard,
-  ThrottlerModule,
-} from '@nestjs/throttler';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { minutes, seconds, ThrottlerModule } from '@nestjs/throttler';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 import { HealthModule } from '@/health/health-module';
 import { TimeoutInterceptor } from '@/interceptors/timeout.interceptor';
@@ -21,7 +16,6 @@ import { CurrencyModule } from '@/currency/currency.module';
 import { ServiceDiscoveryModule } from '@/service-discovery/service-discovery.module';
 import { AppController } from '@/app.controller';
 import { ConcurrencyModule } from '@/concurrency/concurrency.module';
-import { ConcurrencyInterceptor } from '@/concurrency/concurrency.interceptor';
 import { ThrottlingModule } from '@/throttling/throttling.module';
 
 @Module({
@@ -75,16 +69,8 @@ import { ThrottlingModule } from '@/throttling/throttling.module';
   controllers: [AppController],
   providers: [
     {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ConcurrencyInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
