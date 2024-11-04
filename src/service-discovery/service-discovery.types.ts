@@ -1,14 +1,9 @@
-export interface ServiceDiscoveryRequest {
+export interface ServiceDiscoveryEntry {
   name: string;
-  host: string;
-  port: string;
-  scheme: string;
-  healthPingUrl: string;
-  healthCheckUrl: string;
-  healthCheckInterval: number;
-}
-
-export interface ServiceInstance {
   id: string;
-  url: string;
+  healthCheckInterval: number;
+  healthCheckUri: string;
+  healthPingUri: string;
+  httpUri?: string;
+  grpcUri?: string;
 }

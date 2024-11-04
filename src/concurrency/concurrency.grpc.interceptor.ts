@@ -9,7 +9,7 @@ import { finalize } from 'rxjs/operators';
 
 import { ConcurrencyService } from '@/concurrency/concurrency.service';
 import { RpcException } from '@nestjs/microservices';
-import { GrpcStatus } from '@/enums/grpc-status';
+import { GrpcStatus } from '@/enums/grpc-status.enum';
 
 @Injectable()
 export class ConcurrencyGrpcInterceptor implements NestInterceptor {

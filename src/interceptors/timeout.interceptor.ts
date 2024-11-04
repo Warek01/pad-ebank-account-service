@@ -15,7 +15,7 @@ import {
 export class TimeoutInterceptor implements NestInterceptor {
   constructor(private readonly timeout: number) {}
 
-  public intercept(
+  intercept(
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {

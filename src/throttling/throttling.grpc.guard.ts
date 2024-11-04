@@ -4,7 +4,7 @@ import { ServerWritableStreamImpl } from '@grpc/grpc-js/build/src/server-call';
 import { RpcException } from '@nestjs/microservices';
 
 import { ThrottlingService } from '@/throttling/throttling.service';
-import { GrpcStatus } from '@/enums/grpc-status';
+import { GrpcStatus } from '@/enums/grpc-status.enum';
 
 @Injectable()
 export class ThrottlingGrpcGuard implements CanActivate {

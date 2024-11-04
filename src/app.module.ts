@@ -5,7 +5,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { minutes, seconds, ThrottlerModule } from '@nestjs/throttler';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 import { HealthModule } from '@/health/health-module';
 import { TimeoutInterceptor } from '@/interceptors/timeout.interceptor';
@@ -18,6 +17,8 @@ import { ServiceDiscoveryModule } from '@/service-discovery/service-discovery.mo
 import { AppController } from '@/app.controller';
 import { ConcurrencyModule } from '@/concurrency/concurrency.module';
 import { ThrottlingModule } from '@/throttling/throttling.module';
+import { TotalRequestsMetricsInterceptor } from '@/metrics/total-requests-metrics.interceptor';
+import { MetricsModule } from '@/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -43,7 +44,6 @@ import { ThrottlingModule } from '@/throttling/throttling.module';
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
-    PrometheusModule.register(),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (conf: ConfigService<AppEnv>) => [
@@ -67,6 +67,7 @@ import { ThrottlingModule } from '@/throttling/throttling.module';
     ServiceDiscoveryModule,
     ConcurrencyModule,
     ThrottlingModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -78,6 +79,11 @@ import { ThrottlingModule } from '@/throttling/throttling.module';
       provide: APP_INTERCEPTOR,
       useValue: new TimeoutInterceptor(seconds(10)),
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TotalRequestsMetricsInterceptor,
+    },
   ],
+  exports: [],
 })
 export class AppModule {}

@@ -13,7 +13,7 @@ import { ServerWritableStreamImpl } from '@grpc/grpc-js/build/src/server-call';
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LoggingInterceptor.name);
 
-  public intercept(
+  intercept(
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {

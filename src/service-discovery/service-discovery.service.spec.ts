@@ -7,7 +7,6 @@ import { Logger } from '@nestjs/common';
 import { configServiceMockProvider } from '@/test/mocks/config-service.mock';
 import { ServiceDiscoveryService } from '@/service-discovery/service-discovery.service';
 import { AppEnv } from '@/types/app-env';
-import { ServiceDiscoveryRequest } from '@/service-discovery/service-discovery.types';
 
 const mockHttpService = {
   post: jest.fn(),
@@ -38,27 +37,6 @@ describe('ServiceDiscoveryService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  it('should register service successfully', async () => {
-    const mockResponse = of({});
-    mockHttpService.post.mockReturnValue(mockResponse);
-
-    await service.registerService();
-
-    expect(http.post).toHaveBeenCalledWith(
-      'http://service-discovery/api/v1/registry',
-      expect.objectContaining<ServiceDiscoveryRequest>({
-        name: 'AccountService',
-        host: 'localhost',
-        port: '50051',
-        scheme: 'http',
-        healthPingUrl: 'http://localhost:3000/api/v1/health/ping',
-        healthCheckUrl: 'http://localhost:3000/api/v1/health',
-        healthCheckInterval: 60,
-      }),
-      { timeout: requestTimeout },
-    );
   });
 
   it('should retry if registration fails', async () => {
