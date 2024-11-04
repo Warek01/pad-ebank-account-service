@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { minutes, seconds, ThrottlerModule } from '@nestjs/throttler';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 import { HealthModule } from '@/health/health-module';
 import { TimeoutInterceptor } from '@/interceptors/timeout.interceptor';
@@ -42,6 +43,7 @@ import { ThrottlingModule } from '@/throttling/throttling.module';
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
+    PrometheusModule.register(),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (conf: ConfigService<AppEnv>) => [

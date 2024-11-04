@@ -47,7 +47,6 @@ export class ServiceDiscoveryService {
     return res.data;
   }
 
-
   async registerService(retryAttempts = 5): Promise<boolean> {
     const grpcPort = this.config.get('GRPC_PORT');
     const grpcScheme = this.config.get('GRPC_SCHEME');
