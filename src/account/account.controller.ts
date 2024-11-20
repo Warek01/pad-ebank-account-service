@@ -220,6 +220,7 @@ export class AccountController implements AccountServiceController {
       profile: {
         email: user.email,
         fullName: user.fullName,
+        createdAt: user.createdAt.getTime(),
       },
     };
   }

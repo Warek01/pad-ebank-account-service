@@ -31,6 +31,7 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   fullName: string;
+  createdAt: number;
 }
 
 export interface GetProfileOptions {
@@ -40,6 +41,7 @@ export interface GetProfileOptions {
 export interface Profile {
   email: string;
   fullName: string;
+  createdAt: number;
 }
 
 export interface GetProfileResult {

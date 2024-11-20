@@ -22,6 +22,7 @@ describe('CardService', () => {
       email: 'test@gmail.com',
       fullName: 'Test User',
       password: 'test',
+      createdAt: new Date('2024-11-20T13:18:00Z'),
       card: null!,
     };
     const card = service.createCard(mockUser);

@@ -27,6 +27,12 @@ export class Card {
   @Column()
   isBlocked: boolean = false;
 
+  @Column({
+    name: 'created_at',
+    type: 'timestamp without time zone',
+  })
+  createdAt: Date = new Date();
+
   @OneToOne(() => User, (user) => user.card)
   @JoinColumn()
   user: Relation<User>;

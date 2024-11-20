@@ -13,6 +13,12 @@ export class User {
   @Column({ length: 255 })
   password: string;
 
+  @Column({
+    name: 'created_at',
+    type: 'timestamp without time zone',
+  })
+  createdAt: Date = new Date();
+
   @OneToOne(() => Card, (card) => card.user)
   card: Relation<Card>;
 }
