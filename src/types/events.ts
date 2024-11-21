@@ -1,4 +1,4 @@
-import { Currency } from '@/generated/proto/shared';
+import { Currency } from '@/enums/currency.enum';
 
 export const enum AccountEvent {
   BalanceUpdate = 'balance.update',

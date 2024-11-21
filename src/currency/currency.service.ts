@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-
-import { Currency } from '@/generated/proto/shared';
+import { Currency } from '@/enums/currency.enum';
 
 @Injectable()
 export class CurrencyService {
@@ -9,27 +8,31 @@ export class CurrencyService {
     UsdToEur: 0.9,
   };
 
-  convert(amount: number, from: Currency, to: Currency): number {
+  convert(
+    amount: number,
+    from: string | Currency,
+    to: string | Currency,
+  ): number {
     let asUsd: number;
 
     switch (from) {
-      case Currency.USD:
+      case Currency.Usd:
         asUsd = amount;
         break;
-      case Currency.MDL:
+      case Currency.Mdl:
         asUsd = amount / CurrencyService.Rates.UsdToMdl;
         break;
-      case Currency.EUR:
+      case Currency.Eur:
         asUsd = amount / CurrencyService.Rates.UsdToEur;
         break;
     }
 
     switch (to) {
-      case Currency.USD:
+      case Currency.Usd:
         return asUsd;
-      case Currency.MDL:
+      case Currency.Mdl:
         return asUsd * CurrencyService.Rates.UsdToMdl;
-      case Currency.EUR:
+      case Currency.Eur:
         return asUsd * CurrencyService.Rates.UsdToEur;
     }
   }

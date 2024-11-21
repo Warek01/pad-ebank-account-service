@@ -10,22 +10,22 @@ import bcrypt from 'bcryptjs';
 import {
   AccountServiceController,
   AccountServiceControllerMethods,
-  AddCurrencyOptions,
-  AddCurrencyResult,
-  AuthResult,
-  BlockCardResult,
-  CanPerformTransactionResult,
-  CardIdentifier,
-  ChangeCurrencyOptions,
-  ChangeCurrencyResult,
-  GetProfileOptions,
-  GetProfileResult,
-  LoginCredentials,
-  RegisterCredentials,
-  TransactionData,
-  UnblockCardResult,
+  ProtoAddCurrencyOptions,
+  ProtoAddCurrencyResult,
+  ProtoAuthResult,
+  ProtoBlockCardResult,
+  ProtoCanPerformTransactionResult,
+  ProtoCardIdentifier,
+  ProtoChangeCurrencyOptions,
+  ProtoChangeCurrencyResult,
+  ProtoGetProfileOptions,
+  ProtoGetProfileResult,
+  ProtoLoginCredentials,
+  ProtoRegisterCredentials,
+  ProtoTransactionData,
+  ProtoUnblockCardResult,
 } from '@/generated/proto/account_service';
-import { ServiceErrorCode } from '@/generated/proto/shared';
+import { ProtoServiceErrorCode } from '@/generated/proto/shared';
 import { Card, User } from '@/entities';
 import { CardService } from '@/card/card.service';
 import { CurrencyService } from '@/currency/currency.service';
@@ -39,6 +39,7 @@ import { ThrottlingGrpcGuard } from '@/throttling/throttling.grpc.guard';
 import { ConcurrencyGrpcInterceptor } from '@/concurrency/concurrency.grpc.interceptor';
 import { AppEnv } from '@/types/app-env';
 import { LoggingInterceptor } from '@/interceptors/logging.interceptor';
+import { Currency } from '@/enums/currency.enum';
 
 @Controller('account')
 @AccountServiceControllerMethods()
@@ -58,9 +59,9 @@ export class AccountController implements AccountServiceController {
   ) {}
 
   async addCurrency(
-    request: AddCurrencyOptions,
+    request: ProtoAddCurrencyOptions,
     metadata?: Metadata,
-  ): Promise<AddCurrencyResult> {
+  ): Promise<ProtoAddCurrencyResult> {
     const card = await this.cardRepo.findOneBy({
       code: request.cardCode,
     });
@@ -68,7 +69,7 @@ export class AccountController implements AccountServiceController {
     if (!card) {
       return {
         error: {
-          code: ServiceErrorCode.BAD_REQUEST,
+          code: ProtoServiceErrorCode.BAD_REQUEST,
           message: 'card not found',
         },
       };
@@ -82,7 +83,7 @@ export class AccountController implements AccountServiceController {
         ? request.amount
         : this.currencyService.convert(
             request.amount,
-            currencyForAdding,
+            currencyForAdding as Currency,
             card.currency,
           );
 
@@ -100,9 +101,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async blockCard(
-    request: CardIdentifier,
+    request: ProtoCardIdentifier,
     metadata?: Metadata,
-  ): Promise<BlockCardResult> {
+  ): Promise<ProtoBlockCardResult> {
     const card = await this.cardRepo.findOneBy({
       code: request.cardCode,
     });
@@ -110,7 +111,7 @@ export class AccountController implements AccountServiceController {
     if (!card) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ProtoServiceErrorCode.NOT_FOUND,
           message: 'card not found',
         },
       };
@@ -132,9 +133,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async canPerformTransaction(
-    request: TransactionData,
+    request: ProtoTransactionData,
     metadata?: Metadata,
-  ): Promise<CanPerformTransactionResult> {
+  ): Promise<ProtoCanPerformTransactionResult> {
     const card = await this.cardRepo.findOneBy({
       code: request.cardCode,
     });
@@ -142,7 +143,7 @@ export class AccountController implements AccountServiceController {
     if (!card) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ProtoServiceErrorCode.NOT_FOUND,
           message: 'card not found',
         },
       };
@@ -160,9 +161,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async changeCurrency(
-    request: ChangeCurrencyOptions,
+    request: ProtoChangeCurrencyOptions,
     metadata?: Metadata,
-  ): Promise<ChangeCurrencyResult> {
+  ): Promise<ProtoChangeCurrencyResult> {
     const card = await this.cardRepo.findOneBy({
       code: request.cardCode,
     });
@@ -170,7 +171,7 @@ export class AccountController implements AccountServiceController {
     if (!card) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ProtoServiceErrorCode.NOT_FOUND,
           message: 'card not found',
         },
       };
@@ -184,7 +185,7 @@ export class AccountController implements AccountServiceController {
       newCurrency,
     );
 
-    card.currency = newCurrency;
+    card.currency = newCurrency as Currency;
     card.currencyAmount = newAmount;
     await this.cardRepo.save(card);
 
@@ -200,9 +201,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async getProfile(
-    request: GetProfileOptions,
+    request: ProtoGetProfileOptions,
     metadata?: Metadata,
-  ): Promise<GetProfileResult> {
+  ): Promise<ProtoGetProfileResult> {
     const user = await this.userRepo.findOneBy({
       email: request.email,
     });
@@ -210,7 +211,7 @@ export class AccountController implements AccountServiceController {
     if (!user) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ProtoServiceErrorCode.NOT_FOUND,
           message: 'user not found',
         },
       };
@@ -226,9 +227,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async login(
-    request: LoginCredentials,
+    request: ProtoLoginCredentials,
     metadata?: Metadata,
-  ): Promise<AuthResult> {
+  ): Promise<ProtoAuthResult> {
     // Circuit breaker test
     if (this.config.get('UNHEALTHY') === 'true') {
       // await sleep(60_000);
@@ -242,7 +243,7 @@ export class AccountController implements AccountServiceController {
     if (!user) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ProtoServiceErrorCode.NOT_FOUND,
           message: 'user not found',
         },
       };
@@ -256,7 +257,7 @@ export class AccountController implements AccountServiceController {
     if (!compareResult) {
       return {
         error: {
-          code: ServiceErrorCode.UNAUTHORIZED,
+          code: ProtoServiceErrorCode.UNAUTHORIZED,
           message: 'invalid password',
         },
       };
@@ -271,9 +272,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async register(
-    request: RegisterCredentials,
+    request: ProtoRegisterCredentials,
     metadata?: Metadata,
-  ): Promise<AuthResult> {
+  ): Promise<ProtoAuthResult> {
     // Circuit breaker test
     if (this.config.get('UNHEALTHY') === 'true') {
       // await sleep(60_000);
@@ -287,7 +288,7 @@ export class AccountController implements AccountServiceController {
     if (alreadyExists) {
       return {
         error: {
-          code: ServiceErrorCode.CONFLICT,
+          code: ProtoServiceErrorCode.CONFLICT,
           message: 'user already exists',
         },
       };
@@ -315,9 +316,9 @@ export class AccountController implements AccountServiceController {
   }
 
   async unblockCard(
-    request: CardIdentifier,
+    request: ProtoCardIdentifier,
     metadata?: Metadata,
-  ): Promise<UnblockCardResult> {
+  ): Promise<ProtoUnblockCardResult> {
     const card = await this.cardRepo.findOneBy({
       code: request.cardCode,
     });
@@ -325,7 +326,7 @@ export class AccountController implements AccountServiceController {
     if (!card) {
       return {
         error: {
-          code: ServiceErrorCode.NOT_FOUND,
+          code: ProtoServiceErrorCode.NOT_FOUND,
           message: 'card not found',
         },
       };

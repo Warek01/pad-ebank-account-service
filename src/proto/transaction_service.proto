@@ -25,20 +25,20 @@ message CreateTransactionResult {
 }
 
 message TransferData {
-  shared.Currency currency = 1;
+  string currency = 1;
   int32 amount = 2;
   string src_card_code = 3;
   string dst_card_code = 4;
 }
 
 message DepositData {
-  shared.Currency currency = 1;
+  string currency = 1;
   int32 amount = 2;
   string card_code = 3;
 }
 
 message WithdrawData {
-  shared.Currency currency = 1;
+  string currency = 1;
   int32 amount = 2;
   string card_code = 3;
 }
